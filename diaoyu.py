@@ -74,6 +74,8 @@ if __name__ == '__main__':
             y2=box[0][3]
             x=random.randint(int(x1),int(x2))
             y=random.randint(int(y1),int(y2))
+            x=int(1920*x/1080)
+            y=int(1080*x/800)
             speed=random.uniform(0.5,1.5)
             mouse.move(x, y, multiplier=speed)
             # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad)
