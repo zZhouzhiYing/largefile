@@ -63,7 +63,7 @@ if __name__ == '__main__':
         while(True):
             pyautogui.press('6')
             time.sleep(0.5)
-            quyu = (420,0,1080,800)
+            quyu = (420,0,1500,800)
             img = ImageGrab.grab(quyu)
             img.save('yu.png')
             box,score=yupiaoshibie('./yu.png')    
