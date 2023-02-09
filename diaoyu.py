@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (c) Megvii, Inc. and its affiliates.
+
+#开始使用的时候必须目标中只有一个鱼漂，而不能有2个，否则list会报错（2个的话需要和前面图片中的鱼漂做iou才能确定哪个是新的鱼漂，上来就2个的话做不了iou直接报错）
 import keyboard
 import pyautogui
 import pyscreenshot as ImageGrab
@@ -15,8 +17,104 @@ from yolox.data.data_augment import preproc as preprocess
 from yolox.data.datasets import COCO_CLASSES
 from yolox.utils import mkdir, multiclass_nms, demo_postprocess, vis
 from pyHM import mouse
-
+import pyaudio
+import audioop
+import math
+import collections 
+from collections import deque
 pyautogui.FAILSAFE = True
+
+# def listen():
+
+#     print('Well, now we are listening for loud sounds...')
+#     CHUNK = 1024  # CHUNKS of bytes to read each time from mic
+#     FORMAT = pyaudio.paInt16
+#     CHANNELS = 1
+#     RATE = 18000
+#     THRESHOLD = 400  # The threshold intensity that defines silence
+#     # and noise signal (an int. lower than THRESHOLD is silence).
+#     SILENCE_LIMIT = 1  # Silence limit in seconds. The max ammount of seconds where
+#     # only silence is recorded. When this time passes the
+#     # recording finishes and the file is delivered.
+#     # Open stream
+#     p = pyaudio.PyAudio()
+
+
+#     stream = p.open(format=FORMAT,
+#                     channels=CHANNELS,
+#                     rate=RATE,
+#                     input=True,
+#                     frames_per_buffer=CHUNK)
+#     cur_data = ''  # current chunk  of audio data
+#     rel = RATE / CHUNK
+#     # print(rel)
+#     slid_win = deque(maxlen=SILENCE_LIMIT * int(rel))
+
+#     success = False
+#     listening_start_time = time.time()
+#     while True:
+#         try:
+#             cur_data = stream.read(CHUNK)
+#             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
+#             if (sum([x > THRESHOLD for x in slid_win]) > 0):
+#                 print('I heart something!')
+#                 success = True
+#                 break
+#             if time.time() - listening_start_time > 20:
+#                 print('I don\'t hear anything already 20 seconds!')
+#                 break
+#         except IOError:
+#             break
+
+#     # print "* Done recording: " + str(time.time() - start)
+#     stream.close()
+#     p.terminate()
+#     return success
+
+def listen2():
+    print('Well, now we are listening for loud sounds...')
+    CHUNK = 1024  # CHUNKS of bytes to read each time from mic
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 2
+    RATE = 44100
+    THRESHOLD = 300  # The threshold intensity that defines silence
+    # and noise signal (an int. lower than THRESHOLD is silence).
+    SILENCE_LIMIT = 1  # Silence limit in seconds. The max ammount of seconds where
+    # only silence is recorded. When this time passes the
+    # recording finishes and the file is delivered.
+    # Open stream
+    p = pyaudio.PyAudio()
+
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+    success = False
+    listening_start_time = time.time()
+    while True:
+        try:
+            cur_data = stream.read(CHUNK)
+            audio_data = np.fromstring(cur_data, dtype=np.short)
+            temp = np.max(audio_data)
+            print(temp)
+            if (temp>=THRESHOLD):
+                print('I heart something!')
+                success = True
+                break
+            if time.time() - listening_start_time > 20:
+                print('I don\'t hear anything already 20 seconds!')
+                break
+        except IOError:
+            break
+
+    # print "* Done recording: " + str(time.time() - start)
+    stream.close()
+    p.terminate()
+    return success
+
 def compute_iou(rec_1,rec_2):
     '''
     rec_1:左上角(rec_1[0],rec_1[1])    右下角：(rec_1[2],rec_1[3])
@@ -83,7 +181,8 @@ def yupiaoshibie(imgpath):
     return len(box),box,score
 
 if __name__ == '__main__':
-    jilu=[]
+    t=random.uniform(2,2.5)
+    qlist = collections.deque()
     try:
         print('请输入a开始')
         keyboard.wait('a')
@@ -95,66 +194,70 @@ if __name__ == '__main__':
             img.save('yu.png')
             lenn,box,score=yupiaoshibie('./yu.png')    
             # box,score=yupiaoshibie('./assets/a67.png')
+            print(lenn)
+            print(box)
+            print(score)
             if(lenn==1):
-                print(box)
                 image = cv2.imread('yu.png')
                 cv2.rectangle(image, (int(box[0][0]), int(box[0][1])), (int(box[0][2]), int(box[0][3])), (0, 0, 255), 2)  
                 cv2.imwrite('1.png', image)
-                jilu.append(box[0])
+                qlist.append(box[0])
                 x1=box[0][0]
                 y1=box[0][1]
                 x2=box[0][2]
                 y2=box[0][3]
-                x=random.randint(int(x1),int(x2))
-                y=random.randint(int(y1),int(y2))
+                x=((int(x2)-int(x1))/2)+int(x1)
+                y=((int(y2)-int(y1))/2)+int(y1)
                 x=x+420
                 speed=random.uniform(0.5,1.5)
                 mouse.move(x, y, multiplier=speed)
                 # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                keyboard.wait('space')
-                t=random.uniform(1,1.5)
+                if not listen2():
+                    print('If we didn\' hear anything, lets try again')
+                mouse.right_click()
                 time.sleep(t)
             if(lenn==2):
-                print(box)
                 #此处分别计算第二次截图中两个鱼漂box和第一次鱼漂box的iou，iou大的即为第一次的鱼漂坐标，则选iou小的那个作为输出并保留其box（放进jilu里取代之前的）
                 image = cv2.imread('yu.png')
                 cv2.rectangle(image, (int(box[0][0]), int(box[0][1])), (int(box[0][2]), int(box[0][3])), (0, 0, 255), 2)  
                 cv2.rectangle(image, (int(box[1][0]), int(box[1][1])), (int(box[1][2]), int(box[1][3])), (0, 0, 255), 2)  
                 cv2.imwrite('1.png', image)
-                i0=compute_iou(box[0],jilu[0])
-                i1=compute_iou(box[1],jilu[0])
-                jilu.pop(0)
-                if(i0<i1):
-                    jilu.append(box[0])
+                i0=compute_iou(box[0],qlist[0])
+                i1=compute_iou(box[1],qlist[0])
+                qlist.popleft()
+                if(i0<=i1):
+                    qlist.append(box[0])
                     x1=box[0][0]
                     y1=box[0][1]
                     x2=box[0][2]
                     y2=box[0][3]
-                    x=random.randint(int(x1),int(x2))
-                    y=random.randint(int(y1),int(y2))
+                    x=((int(x2)-int(x1))/2)+int(x1)
+                    y=((int(y2)-int(y1))/2)+int(y1)
                     x=x+420
                     speed=random.uniform(0.5,1.5)
                     mouse.move(x, y, multiplier=speed)
                     # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                    keyboard.wait('space')
-                    t=random.uniform(1,1.5)
+                    if not listen2():
+                        print('If we didn\' hear anything, lets try again')
+                    mouse.right_click()
                     time.sleep(t)
                 else:
-                    jilu.append(box[1])
+                    qlist.append(box[1])
                     x1=box[1][0]
                     y1=box[1][1]
                     x2=box[1][2]
                     y2=box[1][3]
-                    x=random.randint(int(x1),int(x2))
-                    y=random.randint(int(y1),int(y2))
+                    x=((int(x2)-int(x1))/2)+int(x1)
+                    y=((int(y2)-int(y1))/2)+int(y1)
                     x=x+420
                     speed=random.uniform(0.5,1.5)
                     mouse.move(x, y, multiplier=speed)
                     # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                    keyboard.wait('space')
-                    t=random.uniform(1,1.5)
+                    if not listen2():
+                        print('If we didn\' hear anything, lets try again')
+                    mouse.right_click()                    
                     time.sleep(t)
-            else:
+            if(lenn>2):
                 print('gg')
                 keyboard.wait('space')
 
