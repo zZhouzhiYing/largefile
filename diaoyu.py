@@ -22,74 +22,30 @@ import audioop
 import math
 import collections 
 from collections import deque
+
 pyautogui.FAILSAFE = True
 
-# def listen():
-
-#     print('Well, now we are listening for loud sounds...')
-#     CHUNK = 1024  # CHUNKS of bytes to read each time from mic
-#     FORMAT = pyaudio.paInt16
-#     CHANNELS = 1
-#     RATE = 18000
-#     THRESHOLD = 400  # The threshold intensity that defines silence
-#     # and noise signal (an int. lower than THRESHOLD is silence).
-#     SILENCE_LIMIT = 1  # Silence limit in seconds. The max ammount of seconds where
-#     # only silence is recorded. When this time passes the
-#     # recording finishes and the file is delivered.
-#     # Open stream
-#     p = pyaudio.PyAudio()
-
-
-#     stream = p.open(format=FORMAT,
-#                     channels=CHANNELS,
-#                     rate=RATE,
-#                     input=True,
-#                     frames_per_buffer=CHUNK)
-#     cur_data = ''  # current chunk  of audio data
-#     rel = RATE / CHUNK
-#     # print(rel)
-#     slid_win = deque(maxlen=SILENCE_LIMIT * int(rel))
-
-#     success = False
-#     listening_start_time = time.time()
-#     while True:
-#         try:
-#             cur_data = stream.read(CHUNK)
-#             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
-#             if (sum([x > THRESHOLD for x in slid_win]) > 0):
-#                 print('I heart something!')
-#                 success = True
-#                 break
-#             if time.time() - listening_start_time > 20:
-#                 print('I don\'t hear anything already 20 seconds!')
-#                 break
-#         except IOError:
-#             break
-
-#     # print "* Done recording: " + str(time.time() - start)
-#     stream.close()
-#     p.terminate()
-#     return success
-
-def listen2():
+def listen():
     print('Well, now we are listening for loud sounds...')
     CHUNK = 1024  # CHUNKS of bytes to read each time from mic
     FORMAT = pyaudio.paInt16
     CHANNELS = 2
     RATE = 44100
-    THRESHOLD = 300  # The threshold intensity that defines silence
+    THRESHOLD = 1000  # The threshold intensity that defines silence
     # and noise signal (an int. lower than THRESHOLD is silence).
     SILENCE_LIMIT = 1  # Silence limit in seconds. The max ammount of seconds where
     # only silence is recorded. When this time passes the
     # recording finishes and the file is delivered.
     # Open stream
     p = pyaudio.PyAudio()
-
+    for index in range(0, p.get_device_count()):
+        print(p. get_device_info_by_index(index))
 
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
+                    input_device_index=0,
                     frames_per_buffer=CHUNK)
 
     success = False
@@ -181,22 +137,19 @@ def yupiaoshibie(imgpath):
     return len(box),box,score
 
 if __name__ == '__main__':
-    t=random.uniform(2,2.5)
+    t=random.uniform(1,2)
     qlist = collections.deque()
     try:
-        print('请输入a开始')
-        keyboard.wait('a')
+        print('请输入o开始')
+        keyboard.wait('o')
         while(True):
             pyautogui.press('6')
-            time.sleep(0.5)
+            time.sleep(1.5)
             quyu = (420,0,1500,800)
             img = ImageGrab.grab(quyu)
             img.save('yu.png')
             lenn,box,score=yupiaoshibie('./yu.png')    
             # box,score=yupiaoshibie('./assets/a67.png')
-            print(lenn)
-            print(box)
-            print(score)
             if(lenn==1):
                 image = cv2.imread('yu.png')
                 cv2.rectangle(image, (int(box[0][0]), int(box[0][1])), (int(box[0][2]), int(box[0][3])), (0, 0, 255), 2)  
@@ -206,13 +159,13 @@ if __name__ == '__main__':
                 y1=box[0][1]
                 x2=box[0][2]
                 y2=box[0][3]
-                x=((int(x2)-int(x1))/2)+int(x1)
-                y=((int(y2)-int(y1))/2)+int(y1)
+                x=int((int(x2)-int(x1))/2)+int(x1)
+                y=int((int(y2)-int(y1))/2)+int(y1)
                 x=x+420
                 speed=random.uniform(0.5,1.5)
                 mouse.move(x, y, multiplier=speed)
                 # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                if not listen2():
+                if not listen():
                     print('If we didn\' hear anything, lets try again')
                 mouse.right_click()
                 time.sleep(t)
@@ -231,13 +184,13 @@ if __name__ == '__main__':
                     y1=box[0][1]
                     x2=box[0][2]
                     y2=box[0][3]
-                    x=((int(x2)-int(x1))/2)+int(x1)
-                    y=((int(y2)-int(y1))/2)+int(y1)
+                    x=int((int(x2)-int(x1))/2)+int(x1)
+                    y=int((int(y2)-int(y1))/2)+int(y1)
                     x=x+420
                     speed=random.uniform(0.5,1.5)
                     mouse.move(x, y, multiplier=speed)
                     # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                    if not listen2():
+                    if not listen():
                         print('If we didn\' hear anything, lets try again')
                     mouse.right_click()
                     time.sleep(t)
@@ -247,13 +200,13 @@ if __name__ == '__main__':
                     y1=box[1][1]
                     x2=box[1][2]
                     y2=box[1][3]
-                    x=((int(x2)-int(x1))/2)+int(x1)
-                    y=((int(y2)-int(y1))/2)+int(y1)
+                    x=int((int(x2)-int(x1))/2)+int(x1)
+                    y=int((int(y2)-int(y1))/2)+int(y1)
                     x=x+420
                     speed=random.uniform(0.5,1.5)
                     mouse.move(x, y, multiplier=speed)
                     # pyautogui.moveTo(x, y, speed, pyautogui.easeInOutQuad) 
-                    if not listen2():
+                    if not listen():
                         print('If we didn\' hear anything, lets try again')
                     mouse.right_click()                    
                     time.sleep(t)
